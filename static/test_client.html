@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acme Corporation - Customer Embed Test Site</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0f172a;
+            color: #e2e8f0;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        header {
+            width: 100%;
+            background-color: #1e293b;
+            padding: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            border-bottom: 1px solid #334155;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            color: #38bdf8;
+        }
+        main {
+            max-width: 800px;
+            width: 90%;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .intro-box {
+            background-color: #1e293b;
+            border: 1px solid #334155;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 40px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .intro-box h2 {
+            margin-top: 0;
+            color: #ffffff;
+        }
+        .intro-box p {
+            color: #94a3b8;
+            line-height: 1.6;
+        }
+        .input-group {
+            margin-top: 24px;
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        input[type="text"] {
+            padding: 12px 16px;
+            border: 1px solid #475569;
+            border-radius: 8px;
+            background-color: #0f172a;
+            color: #ffffff;
+            font-size: 1rem;
+            width: 320px;
+            max-width: 100%;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+        }
+        button {
+            padding: 12px 24px;
+            background-color: #38bdf8;
+            color: #0f172a;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        button:hover {
+            background-color: #7dd3fc;
+            transform: translateY(-1px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .widget-preview-area {
+            border: 2px dashed #475569;
+            border-radius: 12px;
+            padding: 40px 20px;
+            background-color: #0f172a;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        .widget-preview-label {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #64748b;
+        }
+        .alert-hint {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-top: 12px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>ACME CORP - External Website Origin</h1>
+    </header>
+    
+    <main>
+        <div class="intro-box">
+            <h2>Embeddable Widget Live Demo</h2>
+            <p>
+                This webpage is hosted at a separate origin (represented here by port 8080 or a plain file system origin). 
+                By loading our script on this page, it demonstrates <strong>cross-origin resource sharing (CORS)</strong> 
+                and <strong>preflight checking</strong> in action!
+            </p>
+            
+            <div class="input-group">
+                <input type="text" id="widget-id-input" placeholder="Paste Widget UUID (e.g. 7f83b...)">
+                <button onclick="loadCustomWidget()">Embed Widget</button>
+            </div>
+            <div class="alert-hint">Enter your created widget ID to see the form appear on this external page.</div>
+        </div>
+
+        <div class="widget-preview-area" id="embed-target">
+            <span class="widget-preview-label">Widget Embed Anchor Area</span>
+            <div id="loading-placeholder" style="color: #64748b; display: none;">Loading widget bundle...</div>
+        </div>
+    </main>
+
+    <script>
+        function loadCustomWidget() {
+            const widgetId = document.getElementById("widget-id-input").value.trim();
+            if (!widgetId) {
+                alert("Please enter a valid Widget ID first!");
+                return;
+            }
+
+            // Remove any existing widget script or container
+            const existingContainer = document.querySelector(".flyrank-widget-container");
+            if (existingContainer) {
+                existingContainer.remove();
+            }
+            const existingScript = document.getElementById("flyrank-embedded-script");
+            if (existingScript) {
+                existingScript.remove();
+            }
+
+            // Create and append the script tag dynamically to inject our widget loader
+            const scriptTag = document.createElement("script");
+            scriptTag.id = "flyrank-embedded-script";
+            // Dynamically load from our API server port 8000
+            scriptTag.src = `http://localhost:8000/static/widget.js?id=${widgetId}`;
+            
+            const target = document.getElementById("embed-target");
+            target.appendChild(scriptTag);
+        }
+        
+        // Auto fill if widgetId is in URL query parameters
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const widgetId = urlParams.get('widget_id');
+            if (widgetId) {
+                document.getElementById("widget-id-input").value = widgetId;
+                loadCustomWidget();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlyRank - Tenant Admin Dashboard</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        :root {
+            --bg-base: #0b0f19;
+            --bg-surface: rgba(17, 24, 39, 0.7);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --primary: #10b981;
+            --primary-hover: #059669;
+            --primary-glow: rgba(16, 185, 129, 0.15);
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at top right, #1e1b4b 0%, var(--bg-base) 60%);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- Animations --- */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* --- Auth Page Styles --- */
+        #auth-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .auth-card {
+            background: var(--bg-surface);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            padding: 40px;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: var(--card-shadow);
+            animation: fadeIn 0.4s ease-out;
+        }
+        .auth-logo {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 8px;
+            letter-spacing: -0.025em;
+        }
+        .auth-subtitle {
+            color: var(--text-muted);
+            text-align: center;
+            font-size: 0.875rem;
+            margin-bottom: 32px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #d1d5db;
+            margin-bottom: 6px;
+        }
+        .form-input {
+            width: 100%;
+            background: rgba(31, 41, 55, 0.5);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            color: #ffffff;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+        }
+        .auth-btn {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 12px;
+        }
+        .auth-btn:hover {
+            background: var(--primary-hover);
+        }
+        .auth-toggle {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+        .auth-toggle span {
+            color: var(--primary);
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .auth-toggle span:hover {
+            text-decoration: underline;
+        }
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid #ef4444;
+            color: #f87171;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        /* --- Dashboard Page Styles --- */
+        #dashboard-container {
+            display: none; /* Controlled by JS */
+            flex-direction: column;
+            min-height: 100vh;
+            animation: fadeIn 0.4s ease-out;
+        }
+        header {
+            background: rgba(17, 24, 39, 0.8);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            backdrop-filter: blur(12px);
+        }
+        .logo-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            letter-spacing: -0.025em;
+        }
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .user-email {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--text-muted);
+        }
+        
+        /* Main Layout */
+        .dashboard-content {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            box-sizing: border-box;
+        }
+
+        /* Metrics grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+        .metric-card {
+            background: var(--bg-surface);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s;
+        }
+        .metric-card:hover {
+            transform: translateY(-2px);
+        }
+        .metric-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+        }
+        .metric-value {
+            font-size: 2.25rem;
+            font-weight: 800;
+            color: #ffffff;
+        }
+
+        /* Section layout */
+        .grid-split {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 32px;
+            align-items: start;
+            margin-bottom: 40px;
+        }
+        @media (max-width: 968px) {
+            .grid-split {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel-card {
+            background: var(--bg-surface);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+        }
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .panel-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            margin: 0;
+            color: #ffffff;
+        }
+        
+        /* Widget list items */
+        .widget-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .widget-item {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.02);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .widget-item:hover, .widget-item.active {
+            border-color: var(--primary);
+            background: rgba(16, 185, 129, 0.03);
+        }
+        .widget-item-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 4px;
+        }
+        .widget-item-type {
+            font-size: 0.75rem;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 2px 8px;
+            border-radius: 12px;
+            width: fit-content;
+            color: var(--text-muted);
+        }
+
+        /* Submissions list */
+        .sub-table-container {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.875rem;
+        }
+        th {
+            border-bottom: 2px solid var(--border-color);
+            padding: 12px 16px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+        td {
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px;
+            color: var(--text-main);
+            vertical-align: top;
+        }
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.01);
+        }
+        .badge-geo {
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            color: #38bdf8;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            display: inline-block;
+        }
+        
+        /* Snippet box */
+        .snippet-card {
+            background: #090d16;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 24px;
+        }
+        .snippet-code {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.85rem;
+            color: #34d399;
+            word-break: break-all;
+            white-space: pre-wrap;
+        }
+        
+        /* Modal Window */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            background: #111827;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 32px;
+            box-shadow: var(--card-shadow);
+            box-sizing: border-box;
+            position: relative;
+        }
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: var(--text-muted);
+        }
+        .close-modal:hover {
+            color: white;
+        }
+
+        /* SVG charts */
+        .chart-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .bar-chart-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .bar-label {
+            width: 120px;
+            font-size: 0.875rem;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .bar-wrapper {
+            flex-grow: 1;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .bar-fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 5px;
+            width: 0%;
+            transition: width 0.8s cubic-bezier(0.1, 1, 0.1, 1);
+        }
+        .bar-value {
+            width: 40px;
+            text-align: right;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        /* Custom dynamic field creator */
+        .field-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            align-items: center;
+        }
+        .remove-field-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 10px;
+            cursor: pointer;
+        }
+        .remove-field-btn:hover {
+            background: #dc2626;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- --- 1. AUTHENTICATION SECTION --- -->
+    <div id="auth-container">
+        <div class="auth-card">
+            <div class="auth-logo">FLYRANK</div>
+            <div class="auth-subtitle" id="auth-subtitle-text">Tenant Administration Console</div>
+            
+            <div class="error-message" id="auth-error"></div>
+
+            <form id="auth-form">
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" id="auth-email" class="form-input" required placeholder="name@company.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" id="auth-password" class="form-input" required placeholder="••••••••">
+                </div>
+                <button type="submit" id="auth-submit-btn" class="auth-btn">Log In</button>
+            </form>
+
+            <div class="auth-toggle">
+                <span id="auth-toggle-btn" onclick="toggleAuthMode()">Create a new tenant account</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- --- 2. ADMIN DASHBOARD SECTION --- -->
+    <div id="dashboard-container">
+        <header>
+            <div class="logo-group">
+                <span class="logo-text">FLYRANK</span>
+                <span style="font-size: 0.75rem; background: rgba(16, 185, 129, 0.1); border: 1px solid var(--primary); padding: 2px 8px; border-radius: 12px; color: var(--primary);">CONSOLES</span>
+            </div>
+            <div class="user-menu">
+                <span class="user-email" id="current-user-display">tenant@company.com</span>
+                <button class="btn-outline" onclick="logout()">Log Out</button>
+            </div>
+        </header>
+
+        <div class="dashboard-content">
+            <!-- Metrics Row -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-label">Total Lead Submissions</div>
+                    <div class="metric-value" id="metric-total-submissions">0</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Active Widgets</div>
+                    <div class="metric-value" id="metric-total-widgets">0</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Top Location</div>
+                    <div class="metric-value" id="metric-top-location">N/A</div>
+                </div>
+            </div>
+
+            <!-- Two Column Split -->
+            <div class="grid-split">
+                <!-- Left Column: Widgets List -->
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <h3 class="panel-title">Your Widgets</h3>
+                        <button class="auth-btn" style="width: auto; padding: 6px 12px; margin-top:0;" onclick="openCreateWidgetModal()">+ Create</button>
+                    </div>
+                    <div class="widget-list" id="dashboard-widget-list">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+
+                <!-- Right Column: Submissions Table -->
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <h3 class="panel-title" id="submissions-panel-title">Recent Submissions (All Widgets)</h3>
+                    </div>
+                    
+                    <div class="sub-table-container">
+                        <table id="submissions-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Content</th>
+                                    <th>Geographic Origin</th>
+                                </tr>
+                            </thead>
+                            <tbody id="submissions-table-body">
+                                <tr>
+                                    <td colspan="3" style="text-align: center; color: var(--text-muted);">No submissions received yet. Make sure your widget is embedded!</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Scoped Script Snippet Area -->
+                    <div id="embed-snippet-container" style="display: none;">
+                        <div class="snippet-card">
+                            <div class="form-label" style="margin-bottom: 8px; display: flex; justify-content: space-between;">
+                                <span>Embed Code Snippet</span>
+                                <span style="color: var(--primary); cursor: pointer; text-transform: none;" onclick="copyEmbedSnippet()">[Copy Code]</span>
+                            </div>
+                            <pre class="snippet-code" id="snippet-code-text"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Row -->
+            <div class="grid-split">
+                <!-- Location breakdown -->
+                <div class="panel-card">
+                    <h3 class="panel-title">Top Countries</h3>
+                    <div class="chart-container" id="geo-chart-container">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+                
+                <!-- Widget breakdown -->
+                <div class="panel-card">
+                    <h3 class="panel-title">Submissions per Widget</h3>
+                    <div class="chart-container" id="widget-chart-container">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- --- 3. CREATE/EDIT WIDGET MODAL --- -->
+    <div id="widget-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeWidgetModal()">&times;</span>
+            <h3 id="modal-title" style="margin-top:0; margin-bottom: 24px; font-size: 1.5rem; color: #ffffff;">Create Widget</h3>
+            
+            <form id="widget-form">
+                <input type="hidden" id="widget-form-id">
+                
+                <div class="form-group">
+                    <label class="form-label">Widget Name (Admin only)</label>
+                    <input type="text" id="widget-form-name" class="form-input" required placeholder="Newsletter Form">
+                </div>
+                
+                <div class="grid-split" style="grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom:0;">
+                    <div class="form-group">
+                        <label class="form-label">Widget Type</label>
+                        <select id="widget-form-type" class="form-input">
+                            <option value="signup">Signup Form</option>
+                            <option value="contact">Contact Form</option>
+                            <option value="popover">Popover Dialog</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Submit Button Text</label>
+                        <input type="text" id="widget-form-btn-text" class="form-input" value="Submit">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Display Title</label>
+                    <input type="text" id="widget-form-title" class="form-input" placeholder="Join our Newsletter">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Display Description</label>
+                    <input type="text" id="widget-form-desc" class="form-input" placeholder="Enter your email to receive weekly updates.">
+                </div>
+
+                <!-- Custom Fields Creator -->
+                <div class="form-group">
+                    <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>Form Fields</span>
+                        <button type="button" class="btn-outline" style="padding: 4px 8px; font-size: 0.75rem;" onclick="addFormConfigField()">+ Add Field</button>
+                    </label>
+                    <div id="modal-fields-list" style="margin-top: 10px;">
+                        <!-- Custom field rows will be appended here -->
+                    </div>
+                </div>
+
+                <button type="submit" class="auth-btn">Save Widget</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- --- 4. CONTROLLER SCRIPTS --- -->
+    <script>
+        let isRegisterMode = false;
+        let token = localStorage.getItem("tenant_token");
+        let activeWidgetId = null; // Filter submissions
+        
+        // Document Ready Entry Point
+        window.addEventListener("DOMContentLoaded", () => {
+            if (token) {
+                showDashboard();
+            } else {
+                showAuth();
+            }
+        });
+
+        // Toggle authentication mode (login vs register)
+        function toggleAuthMode() {
+            isRegisterMode = !isRegisterMode;
+            const title = document.getElementById("auth-subtitle-text");
+            const submitBtn = document.getElementById("auth-submit-btn");
+            const toggleBtn = document.getElementById("auth-toggle-btn");
+            const err = document.getElementById("auth-error");
+            
+            err.style.display = "none";
+            
+            if (isRegisterMode) {
+                title.textContent = "Register a new Tenant Account";
+                submitBtn.textContent = "Create Account";
+                toggleBtn.textContent = "Back to Log In";
+            } else {
+                title.textContent = "Tenant Administration Console";
+                submitBtn.textContent = "Log In";
+                toggleBtn.textContent = "Create a new tenant account";
+            }
+        }
+
+        // Handle Log in / Register submission
+        document.getElementById("auth-form").addEventListener("submit", function(e) {
+            e.preventDefault();
+            const email = document.getElementById("auth-email").value.trim();
+            const password = document.getElementById("auth-password").value;
+            const errDiv = document.getElementById("auth-error");
+            
+            errDiv.style.display = "none";
+            
+            const endpoint = isRegisterMode ? "/api/auth/register" : "/api/auth/token";
+            
+            let body;
+            let headers = {};
+            
+            if (isRegisterMode) {
+                headers["Content-Type"] = "application/json";
+                body = JSON.stringify({ email, password });
+            } else {
+                // OAuth2 token password form format
+                const formDetails = new URLSearchParams();
+                formDetails.append("username", email);
+                formDetails.append("password", password);
+                body = formDetails;
+            }
+
+            fetch(endpoint, {
+                method: "POST",
+                headers: headers,
+                body: body
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.detail || "Authentication request failed.");
+                }
+                return data;
+            })
+            .then(data => {
+                if (isRegisterMode) {
+                    // Registration succeeded, switch back to login and alert
+                    isRegisterMode = false;
+                    toggleAuthMode();
+                    alert("Tenant account successfully created! Please log in.");
+                } else {
+                    // Login succeeded
+                    token = data.access_token;
+                    localStorage.setItem("tenant_token", token);
+                    localStorage.setItem("tenant_email", email);
+                    showDashboard();
+                }
+            })
+            .catch(err => {
+                errDiv.textContent = err.message;
+                errDiv.style.display = "block";
+            });
+        });
+
+        function showAuth() {
+            document.getElementById("auth-container").style.display = "flex";
+            document.getElementById("dashboard-container").style.display = "none";
+        }
+
+        function showDashboard() {
+            document.getElementById("auth-container").style.display = "none";
+            document.getElementById("dashboard-container").style.display = "flex";
+            document.getElementById("current-user-display").textContent = localStorage.getItem("tenant_email") || "Tenant";
+            
+            refreshDashboardData();
+        }
+
+        function logout() {
+            localStorage.removeItem("tenant_token");
+            localStorage.removeItem("tenant_email");
+            token = null;
+            showAuth();
+        }
+
+        // Fetch widgets, submissions, and analytics
+        function refreshDashboardData() {
+            const headers = {
+                "Authorization": `Bearer ${token}`
+            };
+
+            // 1. Fetch Widgets List
+            fetch("/api/widgets", { headers })
+            .then(res => {
+                if (res.status === 401) { logout(); throw new Error("Session expired"); }
+                return res.json();
+            })
+            .then(widgets => {
+                renderWidgetsList(widgets);
+                document.getElementById("metric-total-widgets").textContent = widgets.length;
+            });
+
+            // 2. Fetch Submissions (scoped by active filter)
+            let submissionsUrl = "/api/dashboard/submissions";
+            if (activeWidgetId) {
+                submissionsUrl += `?widget_id=${activeWidgetId}`;
+            }
+            
+            fetch(submissionsUrl, { headers })
+            .then(res => res.json())
+            .then(submissions => {
+                renderSubmissionsTable(submissions);
+            });
+
+            // 3. Fetch Analytics Graph counts
+            fetch("/api/dashboard/analytics", { headers })
+            .then(res => res.json())
+            .then(analytics => {
+                document.getElementById("metric-total-submissions").textContent = analytics.total_submissions;
+                
+                // Find top country location
+                let topLoc = "N/A";
+                let topCount = 0;
+                analytics.geo_breakdown.forEach(g => {
+                    if (g.count > topCount && g.country !== "Unknown") {
+                        topCount = g.count;
+                        topLoc = g.country;
+                    }
+                });
+                document.getElementById("metric-top-location").textContent = topLoc + (topCount > 0 ? ` (${topCount})` : '');
+                
+                renderAnalyticsCharts(analytics);
+            });
+        }
+
+        function renderWidgetsList(widgets) {
+            const container = document.getElementById("dashboard-widget-list");
+            container.innerHTML = "";
+            
+            // "Show All" item
+            const allItem = document.createElement("div");
+            allItem.className = `widget-item ${activeWidgetId === null ? 'active' : ''}`;
+            allItem.innerHTML = `
+                <div class="widget-item-name">Show All Widgets</div>
+                <div style="font-size:0.75rem; color:var(--text-muted);">Aggregated feed</div>
+            `;
+            allItem.onclick = () => {
+                activeWidgetId = null;
+                document.getElementById("submissions-panel-title").textContent = "Recent Submissions (All Widgets)";
+                document.getElementById("embed-snippet-container").style.display = "none";
+                
+                // Select styling
+                document.querySelectorAll(".widget-item").forEach(el => el.classList.remove("active"));
+                allItem.classList.add("active");
+                
+                refreshDashboardData();
+            };
+            container.appendChild(allItem);
+
+            widgets.forEach(widget => {
+                const item = document.createElement("div");
+                item.className = `widget-item ${activeWidgetId === widget.id ? 'active' : ''}`;
+                item.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div class="widget-item-name">${escapeHtml(widget.name)}</div>
+                        <div style="display:flex; gap:8px;">
+                            <span style="color:#38bdf8; font-size:0.75rem; cursor:pointer;" onclick="event.stopPropagation(); editWidget('${widget.id}')">[Edit]</span>
+                            <span style="color:#ef4444; font-size:0.75rem; cursor:pointer;" onclick="event.stopPropagation(); deleteWidget('${widget.id}')">[Del]</span>
+                        </div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+                        <span class="widget-item-type">${widget.type}</span>
+                        <span style="font-size:0.7rem; color:var(--text-muted); font-family:monospace;">${widget.id.substring(0,8)}...</span>
+                    </div>
+                `;
+                item.onclick = () => {
+                    activeWidgetId = widget.id;
+                    document.getElementById("submissions-panel-title").textContent = `Submissions for: ${widget.name}`;
+                    
+                    // Show code snippet box
+                    const origin = window.location.origin;
+                    document.getElementById("snippet-code-text").textContent = 
+                        `<script src="${origin}/static/widget.js?id=${widget.id}"></script>`;
+                    document.getElementById("embed-snippet-container").style.display = "block";
+
+                    // Select styling
+                    document.querySelectorAll(".widget-item").forEach(el => el.classList.remove("active"));
+                    item.classList.add("active");
+
+                    refreshDashboardData();
+                };
+                container.appendChild(item);
+            });
+        }
+
+        function renderSubmissionsTable(submissions) {
+            const tbody = document.getElementById("submissions-table-body");
+            tbody.innerHTML = "";
+
+            if (submissions.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="3" style="text-align: center; color: var(--text-muted);">No submissions received yet.</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            submissions.forEach(sub => {
+                const date = new Date(sub.created_at).toLocaleString();
+                
+                // Construct a beautiful payload viewer
+                let payloadHtml = '<ul style="margin:0; padding-left:16px;">';
+                for (const [key, value] of Object.entries(sub.payload)) {
+                    payloadHtml += `<li><strong>${escapeHtml(key)}:</strong> ${escapeHtml(String(value))}</li>`;
+                }
+                payloadHtml += '</ul>';
+
+                const country = sub.geo_country || "Unknown";
+                const city = sub.geo_city ? `${sub.geo_city}, ` : "";
+                const provider = sub.geo_provider ? ` via ${sub.geo_provider}` : "";
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="white-space: nowrap; font-weight:500; color:var(--text-muted);">${date}</td>
+                        <td>${payloadHtml}</td>
+                        <td>
+                            <span class="badge-geo">${escapeHtml(city)}${escapeHtml(country)}</span>
+                            <div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">${escapeHtml(provider)}</div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderAnalyticsCharts(analytics) {
+            // Geolocation top countries bar chart
+            const geoContainer = document.getElementById("geo-chart-container");
+            geoContainer.innerHTML = "";
+            
+            // Sort by count
+            const sortedGeo = [...analytics.geo_breakdown].sort((a,b) => b.count - a.count).slice(0, 5);
+            const maxGeoCount = sortedGeo.length > 0 ? sortedGeo[0].count : 1;
+
+            if (sortedGeo.length === 0) {
+                geoContainer.innerHTML = '<div style="color:var(--text-muted); text-align:center; font-size:0.875rem;">No location metrics yet.</div>';
+            } else {
+                sortedGeo.forEach(g => {
+                    const widthPct = (g.count / maxGeoCount) * 100;
+                    geoContainer.innerHTML += `
+                        <div class="bar-chart-row">
+                            <div class="bar-label">${escapeHtml(g.country)}</div>
+                            <div class="bar-wrapper">
+                                <div class="bar-fill" style="width: ${widthPct}%"></div>
+                            </div>
+                            <div class="bar-value">${g.count}</div>
+                        </div>
+                    `;
+                });
+            }
+
+            // Widget stats bar chart
+            const widgetContainer = document.getElementById("widget-chart-container");
+            widgetContainer.innerHTML = "";
+
+            const sortedWidgets = [...analytics.widget_stats].sort((a,b) => b.count - a.count).slice(0, 5);
+            const maxWidgetCount = sortedWidgets.length > 0 ? sortedWidgets[0].count : 1;
+
+            if (sortedWidgets.length === 0) {
+                widgetContainer.innerHTML = '<div style="color:var(--text-muted); text-align:center; font-size:0.875rem;">No widgets created yet.</div>';
+            } else {
+                sortedWidgets.forEach(w => {
+                    const widthPct = (w.count / maxWidgetCount) * 100;
+                    widgetContainer.innerHTML += `
+                        <div class="bar-chart-row">
+                            <div class="bar-label">${escapeHtml(w.widget_name)}</div>
+                            <div class="bar-wrapper">
+                                <div class="bar-fill" style="width: ${widthPct}%"></div>
+                            </div>
+                            <div class="bar-value">${w.count}</div>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        // Copy Code snippet to clipboard
+        function copyEmbedSnippet() {
+            const text = document.getElementById("snippet-code-text").textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                alert("Embed script snippet successfully copied to clipboard!");
+            });
+        }
+
+        // --- Custom Fields Form Builder Creator ---
+        let currentFieldCount = 0;
+
+        function addFormConfigField(name = "", type = "text", label = "", required = false, placeholder = "", optionsStr = "") {
+            const container = document.getElementById("modal-fields-list");
+            const index = currentFieldCount++;
+
+            const fieldDiv = document.createElement("div");
+            fieldDiv.className = "field-row";
+            fieldDiv.id = `field-row-${index}`;
+            fieldDiv.innerHTML = `
+                <div style="display:grid; grid-template-columns: 1.5fr 1.2fr 2fr 1fr; gap:8px; flex-grow:1;">
+                    <input type="text" class="form-input field-key-name" value="${escapeHtml(name)}" placeholder="field_name (e.g. email)" required>
+                    <select class="form-input field-key-type">
+                        <option value="text" ${type==='text'?'selected':''}>Text</option>
+                        <option value="email" ${type==='email'?'selected':''}>Email</option>
+                        <option value="number" ${type==='number'?'selected':''}>Number</option>
+                        <option value="textarea" ${type==='textarea'?'selected':''}>Textarea</option>
+                        <option value="select" ${type==='select'?'selected':''}>Select</option>
+                    </select>
+                    <input type="text" class="form-input field-key-label" value="${escapeHtml(label)}" placeholder="Label text (e.g. Email)" required>
+                    <div style="display:flex; align-items:center; gap:4px; font-size:0.75rem;">
+                        <input type="checkbox" class="field-key-req" ${required?'checked':''}> Req
+                    </div>
+                </div>
+                <div class="extra-field-settings" style="width:100%; margin-top:8px; display:${type==='select'?'block':'none'};">
+                    <input type="text" class="form-input field-key-opts" value="${escapeHtml(optionsStr)}" placeholder="Options separated by commas: Opt1, Opt2, Opt3">
+                </div>
+                <div class="extra-field-placeholder" style="width:100%; margin-top:8px; display:${type==='select'?'none':'block'};">
+                    <input type="text" class="form-input field-key-place" value="${escapeHtml(placeholder)}" placeholder="Input Placeholder text">
+                </div>
+                <button type="button" class="remove-field-btn" onclick="removeConfigField(${index})">&times;</button>
+            `;
+
+            // Setup select toggle
+            const selectEl = fieldDiv.querySelector(".field-key-type");
+            const optsDiv = fieldDiv.querySelector(".extra-field-settings");
+            const placeDiv = fieldDiv.querySelector(".extra-field-placeholder");
+            selectEl.addEventListener("change", (e) => {
+                if (e.target.value === "select") {
+                    optsDiv.style.display = "block";
+                    placeDiv.style.display = "none";
+                } else {
+                    optsDiv.style.display = "none";
+                    placeDiv.style.display = "block";
+                }
+            });
+
+            container.appendChild(fieldDiv);
+        }
+
+        function removeConfigField(index) {
+            const row = document.getElementById(`field-row-${index}`);
+            if (row) row.remove();
+        }
+
+        // Open Create Modal
+        function openCreateWidgetModal() {
+            document.getElementById("modal-title").textContent = "Create Widget";
+            document.getElementById("widget-form-id").value = "";
+            document.getElementById("widget-form-name").value = "";
+            document.getElementById("widget-form-type").value = "signup";
+            document.getElementById("widget-form-btn-text").value = "Submit";
+            document.getElementById("widget-form-title").value = "";
+            document.getElementById("widget-form-desc").value = "";
+            
+            document.getElementById("modal-fields-list").innerHTML = "";
+            currentFieldCount = 0;
+            
+            // Add default fields (name, email)
+            addFormConfigField("name", "text", "Name", true, "Your full name");
+            addFormConfigField("email", "email", "Email Address", true, "your.email@domain.com");
+
+            document.getElementById("widget-modal").style.display = "flex";
+        }
+
+        // Close Modal
+        function closeWidgetModal() {
+            document.getElementById("widget-modal").style.display = "none";
+        }
+
+        // Save / Submit Create/Edit Form
+        document.getElementById("widget-form").addEventListener("submit", function(e) {
+            e.preventDefault();
+            
+            const widgetId = document.getElementById("widget-form-id").value;
+            const name = document.getElementById("widget-form-name").value.trim();
+            const type = document.getElementById("widget-form-type").value;
+            const btnText = document.getElementById("widget-form-btn-text").value.trim();
+            const title = document.getElementById("widget-form-title").value.trim();
+            const desc = document.getElementById("widget-form-desc").value.trim();
+
+            // Collect custom fields
+            const fields = [];
+            const fieldRows = document.querySelectorAll(".field-row");
+            fieldRows.forEach(row => {
+                const fName = row.querySelector(".field-key-name").value.trim();
+                const fType = row.querySelector(".field-key-type").value;
+                const fLabel = row.querySelector(".field-key-label").value.trim();
+                const fReq = row.querySelector(".field-key-req").checked;
+                
+                const fieldObj = {
+                    name: fName,
+                    type: fType,
+                    label: fLabel,
+                    required: fReq
+                };
+
+                if (fType === "select") {
+                    const optsStr = row.querySelector(".field-key-opts").value.trim();
+                    fieldObj.options = optsStr.split(",").map(s => s.trim()).filter(s => s !== "");
+                } else {
+                    const placeStr = row.querySelector(".field-key-place").value.trim();
+                    if (placeStr) fieldObj.placeholder = placeStr;
+                }
+
+                fields.push(fieldObj);
+            });
+
+            const payload = {
+                name,
+                type,
+                title,
+                description: desc,
+                button_text: btnText,
+                fields,
+                display_settings: {}
+            };
+
+            const endpoint = widgetId ? `/api/widgets/${widgetId}` : "/api/widgets";
+            const method = widgetId ? "PUT" : "POST";
+
+            fetch(endpoint, {
+                method: method,
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(res => {
+                if (!res.ok) throw new Error("Saving widget failed.");
+                return res.json();
+            })
+            .then(widget => {
+                closeWidgetModal();
+                refreshDashboardData();
+            })
+            .catch(err => {
+                alert(err.message);
+            });
+        });
+
+        // Edit widget trigger
+        function editWidget(widgetId) {
+            fetch(`/api/widgets/${widgetId}`, {
+                headers: { "Authorization": `Bearer ${token}` }
+            })
+            .then(res => res.json())
+            .then(widget => {
+                document.getElementById("modal-title").textContent = "Edit Widget";
+                document.getElementById("widget-form-id").value = widget.id;
+                document.getElementById("widget-form-name").value = widget.name;
+                document.getElementById("widget-form-type").value = widget.type;
+                document.getElementById("widget-form-btn-text").value = widget.button_text;
+                document.getElementById("widget-form-title").value = widget.title || "";
+                document.getElementById("widget-form-desc").value = widget.description || "";
+                
+                document.getElementById("modal-fields-list").innerHTML = "";
+                currentFieldCount = 0;
+
+                widget.fields.forEach(field => {
+                    const optsStr = field.options ? field.options.join(", ") : "";
+                    const placeholder = field.placeholder || "";
+                    addFormConfigField(field.name, field.type, field.label, field.required, placeholder, optsStr);
+                });
+
+                document.getElementById("widget-modal").style.display = "flex";
+            });
+        }
+
+        // Delete widget trigger
+        function deleteWidget(widgetId) {
+            if (!confirm("Are you sure you want to permanently delete this widget? All submissions associated with it will be lost.")) {
+                return;
+            }
+
+            fetch(`/api/widgets/${widgetId}`, {
+                method: "DELETE",
+                headers: { "Authorization": `Bearer ${token}` }
+            })
+            .then(res => {
+                if (!res.ok) throw new Error("Deleting widget failed.");
+                if (activeWidgetId === widgetId) {
+                    activeWidgetId = null;
+                }
+                refreshDashboardData();
+            })
+            .catch(err => alert(err.message));
+        }
+
+        // Safe HTML rendering escape
+        function escapeHtml(str) {
+            if (!str) return "";
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
