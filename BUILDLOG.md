@@ -31,3 +31,9 @@ This log documents the collaboration, development trajectory, and debugging proc
 ### 4. TestClient Client Hostname resolving
 * **Issue**: During tests, FastAPI's `TestClient` uses `"testclient"` as the client host. This caused the geolocation service to pass the string `"testclient"` to external APIs, triggering failure responses.
 * **Resolution**: Patched `services/geo_service.py` to recognize `"testclient"` as a local address, defaulting to `8.8.8.8` (Google Public DNS) for testing. Furthermore, implemented a mock override parameter (`MOCK_PROVIDER_A_RESPONSE` and `MOCK_PROVIDER_B_RESPONSE`) to make test runs entirely deterministic and network-independent.
+
+### 5. Repository Initialization & Git History
+
+* **Issue**: The dedicated GitHub repository was initialized after the initial development work had already been completed. This meant the Git history does not represent the complete chronology of the project's development from day one.
+
+* **Resolution**: Initialized and published the dedicated repository once this was identified, and tracked subsequent development, testing, documentation, and fixes through meaningful commits. No historical commits were fabricated or backdated.
